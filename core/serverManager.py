@@ -13,13 +13,15 @@ class ServerManager:
         self.threads = []
 
     def run(self):
+
         tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         tcpServer.bind(('0.0.0.0', self.port))
         tcpServer.listen(self.thread_count)
-        tcpServer.setblocking(False)
+        # tcpServer.setblocking(False)
 
         for i in range(self.thread_count):
-            thread = ServerThread(tcpServer)
+            thread = ServerThread(tcpServer, self.document_root)
             self.threads.append(thread)
             thread.run()
+

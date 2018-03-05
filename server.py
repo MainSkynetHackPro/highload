@@ -4,5 +4,5 @@ from utils.configLoader import load_config
 
 if __name__ == '__main__':
     config = load_config()
-    server = ServerManager(config['listen'], config['thread_limit'], config['listen'])
+    server = ServerManager(config['listen'], config['thread_limit'], config['document_root'])
     server.run()
