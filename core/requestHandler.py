@@ -12,12 +12,17 @@ class RequestHandler:
         self.document_root = document_root
         self.headers, self.method, self.uri, self.version_protocol = self.__parse_request(request)
         self.uri = urllib.unquote(self.uri)
+        self.uri = self.uri.split('?')[0]
 
     def get_response(self):
         if not self.method in self.allowed_methods:
             return self.__http403()
         path = self.__get_path()
 
+        if '../' in path:
+            return self.__http404()
+        if self.method == 'HEAD':
+            return self.__build_head_response(path)
         return self.__build_response(path)
 
     def __parse_request(self, request):
@@ -54,6 +59,24 @@ class RequestHandler:
 
         return response
 
+    def __build_head_response(self, path):
+        try:
+            f = open(path)
+            body = f.read()
+            f.close()
+        except IOError:
+            return self.__http404()
+
+        response = "HTTP/1.1 200 ACCEPTED\r\n"
+        # response += self.__get_server_str()
+        # response += self.__get_conection_str()
+        # response += self.__get_date_str()
+        response += "Content-Length: {0}\n".format(len(body))
+
+        response += "\r\n\r\n"
+
+        return response
+
     def __http404(self):
         response = "HTTP/1.1 404 NOT FOUND\n"
         response += self.__get_server_str()
@@ -81,10 +104,14 @@ class RequestHandler:
             '.jpeg': 'image/jpeg',
             '.png': 'image/png',
             '.gif': 'image/gif',
-            '.swf': 'application/x-shockwave-flash'
+            '.swf': 'application/x-shockwave-flash',
+            '.txt': 'text/txt',
         }
         filename, file_extension = os.path.splitext(path)
-        return "Content-Type: {content_type}; charset=UTF-8\n".format(**{'content_type': content_types[file_extension]})
+        try:
+            return "Content-Type: {content_type}\n".format(**{'content_type': content_types[file_extension]})
+        except KeyError:
+            return "Content-Type: text/txt"
 
     def __get_server_str(self):
         return "Server: Custom Server\n"
