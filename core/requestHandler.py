@@ -29,15 +29,15 @@ class RequestHandler:
         data = request.split('\r\n\r\n')
         data_for_headers = data[0].split('\r\n')
 
-        return [{elem.split(': ')[0]: elem.split(': ')[1] for elem in data_for_headers[1:]}] + data_for_headers[0].split(' ')
+        return [dict((elem.split(': ')[0], elem.split(': ')[1])for elem in data_for_headers[1:])] + data_for_headers[0].split(' ')
 
     def __get_path(self):
         if self.uri[-1] == '/':
-            path = '{0}index.html'.format(self.uri)
+            path = '%(uri)sindex.html' % {'uri': self.uri}
         else:
             path = self.uri
 
-        return u'{0}{1}'.format(self.document_root, path)
+        return '%(root)s%(path)s' % {'root': self.document_root, 'path': path}
 
     def __build_response(self, path):
         try:
@@ -52,7 +52,7 @@ class RequestHandler:
         response += self.__get_extension_content_type(path)
         response += self.__get_conection_str()
         response += self.__get_date_str()
-        response += "Content-Length: {0}\n".format(len(body))
+        response += "Content-Length: %(i)s\n" % {'i': len(body)}
         response += "\n"
 
         response += body
@@ -71,7 +71,7 @@ class RequestHandler:
         # response += self.__get_server_str()
         # response += self.__get_conection_str()
         # response += self.__get_date_str()
-        response += "Content-Length: {0}\n".format(len(body))
+        response += "Content-Length: %(i)s\n" % {'i': len(body)}
 
         response += "\r\n\r\n"
 
@@ -109,7 +109,7 @@ class RequestHandler:
         }
         filename, file_extension = os.path.splitext(path)
         try:
-            return "Content-Type: {content_type}\n".format(**{'content_type': content_types[file_extension]})
+            return "Content-Type: %(content_type)s\n" % {'content_type': content_types[file_extension]}
         except KeyError:
             return "Content-Type: text/txt"
 
@@ -121,4 +121,4 @@ class RequestHandler:
 
     def __get_date_str(self):
         date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-        return "Date: {0}\n".format(date)
+        return "Date: %(date)s\n" % {'date': date}

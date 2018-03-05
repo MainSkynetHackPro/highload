@@ -1,5 +1,7 @@
 import socket
 
+import sys
+
 from core.serverThread import ServerThread
 
 
@@ -12,7 +14,14 @@ class ServerManager:
 
         self.threads = []
 
+    def get_step_function(self, i):
+        def step(index):
+            return i + self.thread_count*index
+        return step
+
     def run(self):
+        stepper = self.get_step_function(0)
+        stepper2 = self.get_step_function(1)
 
         tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -20,8 +29,15 @@ class ServerManager:
         tcpServer.listen(self.thread_count)
         # tcpServer.setblocking(False)
 
-        for i in range(self.thread_count):
-            thread = ServerThread(tcpServer, self.document_root)
-            self.threads.append(thread)
-            thread.run()
+        try:
+            for i in range(0, self.thread_count):
+                print('spawning thread', i)
+                thread = ServerThread(tcpServer, self.document_root, self.get_step_function(i))
+                self.threads.append(thread)
+                thread.start()
+        except KeyboardInterrupt:
+            sys.exit()
+
+        for i in range(0, self.thread_count):
+            self.threads[i].join()
 

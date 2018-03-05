@@ -1,8 +1,8 @@
 def load_config():
     try:
-        f = open('/etc/httpd.conf')
+        f = open('httpd.conf')
     except IOError:
-        raise Exception("Config file not found in /etc/httpd.conf")
+        raise Exception("Config file not found")
     config = {}
 
     lines = f.read().splitlines()
